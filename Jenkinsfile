@@ -1,4 +1,3 @@
-//test
 pipeline {
     agent any
 
@@ -15,7 +14,17 @@ pipeline {
         }
         stage('Run Tests') {
             steps {
-                bat 'npm test || exit /b 0'
+                bat 'npm test > test_log.txt 2>&1 || exit /b 0'
+            }
+            post {
+                always {
+                    emailext(
+                        subject: "Test Stage: ${currentBuild.currentResult} - Build #${env.BUILD_NUMBER}",
+                        body: "The Run Tests stage completed with status: ${currentBuild.currentResult}. See attached log.",
+                        to: 'ayushisoni1004@gmail.com',
+                        attachmentsPattern: 'test_log.txt'
+                    )
+                }
             }
         }
         stage('Generate Coverage Report') {
@@ -25,7 +34,17 @@ pipeline {
         }
         stage('NPM Audit (Security Scan)') {
             steps {
-                bat 'npm audit || exit /b 0'
+                bat 'npm audit > audit_log.txt 2>&1 || exit /b 0'
+            }
+            post {
+                always {
+                    emailext(
+                        subject: "Security Scan: ${currentBuild.currentResult} - Build #${env.BUILD_NUMBER}",
+                        body: "The NPM Audit stage completed with status: ${currentBuild.currentResult}. See attached log.",
+                        to: 'ayushisoni1004@gmail.com',
+                        attachmentsPattern: 'audit_log.txt'
+                    )
+                }
             }
         }
     }
